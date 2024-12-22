@@ -1,5 +1,10 @@
+import { WheelSelector } from "../obj/WheelSelector";
 import { Position } from "../types/Position";
-import { SelectorItem } from "../types/SelectorItem";
+
+const whiteColor = "rgba(255, 255, 255, 1)";
+const blackColor = "rgba(0, 0, 0, 1)";
+const defaultColor = "rgba(0, 0, 0, 0.7)";
+const selectedColor = "rgba(126, 221, 17, 0.7)";
 
 export function makeCanvas(
 	document: Document,
@@ -24,71 +29,85 @@ export function removeCanvas(canvas: HTMLCanvasElement) {
 	canvas.remove();
 }
 
-export function drawItems(
+export function clearCanvas(canvas: HTMLCanvasElement) {
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+export function drawItem(
 	canvas: HTMLCanvasElement,
-	innerSize: number,
-	outerSize: number,
-	items: SelectorItem[]
+	selector: WheelSelector,
+	itemNo: number | null
 ) {
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
+	if (itemNo === null) return;
 
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	const { items, outerDistance, innerDistance, selectedItemNo } = selector;
+	const item = items[itemNo];
 
 	const itemCount = items.length;
 	const angleStep = (2 * Math.PI) / itemCount; // Divide 360 degrees into equal parts
-	const defaultColors = ["rgba(0, 0, 0, 0.5)", "rgba(100, 100, 100, 0.5)"]; // Default color palette
-	const transparentColor = "rgba(0, 0, 0, 1)";
-	let startAngle = 0;
+	const startAngle = angleStep * itemNo;
+	const endAngle = startAngle + angleStep;
 
-	for (const idx in items) {
-		const index = parseInt(idx);
-		const item = items[index];
-		const endAngle = startAngle + angleStep;
+	//Erase outer slice
+	ctx.globalCompositeOperation = "destination-out";
+	ctx.beginPath();
+	ctx.moveTo(outerDistance, outerDistance);
+	ctx.arc(outerDistance, outerDistance, outerDistance, startAngle, endAngle);
+	ctx.closePath();
+	ctx.fillStyle = whiteColor;
+	ctx.fill();
 
-		// Draw the outer slice
-		ctx.beginPath();
-		ctx.moveTo(outerSize, outerSize);
-		ctx.arc(outerSize, outerSize, outerSize, startAngle, endAngle, false);
-		ctx.lineTo(outerSize, outerSize); // Close the outer slice
-		ctx.closePath();
-		ctx.fillStyle = defaultColors[index % defaultColors.length]; // Assign item color or default
-		ctx.fill();
+	// Draw the outer slice
+	ctx.globalCompositeOperation = "source-over";
+	ctx.beginPath();
+	ctx.moveTo(outerDistance, outerDistance);
+	ctx.arc(outerDistance, outerDistance, outerDistance, startAngle, endAngle);
+	ctx.closePath();
+	ctx.fillStyle = selectedItemNo === itemNo ? selectedColor : defaultColor; // Assign item color or default
+	ctx.fill();
 
-		// Cut out the inner circle (make it transparent)
-		ctx.globalCompositeOperation = "destination-out";
-		ctx.beginPath();
-		ctx.arc(outerSize, outerSize, innerSize, startAngle, endAngle, false);
-		ctx.lineTo(outerSize, outerSize); // Close the inner slice
-		ctx.closePath();
-		ctx.fillStyle = transparentColor; // Assign item color or default
-		ctx.fill(); // Cut out the inner area
+	ctx.globalCompositeOperation = "source-over";
+	drawLineFromCenter(canvas, startAngle, outerDistance);
+	drawLineFromCenter(canvas, endAngle, outerDistance);
 
-		// Restore composite operation to default
-		ctx.globalCompositeOperation = "source-over";
+	// Add the label
+	const midAngle = startAngle + angleStep / 2; // Find the midpoint of the slice
+	const textRadius = (innerDistance + outerDistance) / 2; // Position text between inner and outer radii
+	const textX = outerDistance + textRadius * Math.cos(midAngle); // X-coordinate for text
+	const textY = outerDistance + textRadius * Math.sin(midAngle); // Y-coordinate for text
 
-		// Add the label
-		const midAngle = startAngle + angleStep / 2; // Find the midpoint of the slice
-		const textRadius = (innerSize + outerSize) / 2; // Position text between inner and outer radii
-		const textX = outerSize + textRadius * Math.cos(midAngle); // X-coordinate for text
-		const textY = outerSize + textRadius * Math.sin(midAngle); // Y-coordinate for text
+	ctx.fillStyle = selectedItemNo === itemNo ? blackColor : whiteColor; // Text color
+	ctx.font = "16px Arial"; // Text font
+	ctx.textAlign = "center"; // Center-align text
+	ctx.textBaseline = "middle"; // Middle-align text
+	ctx.fillText(item.name, textX, textY); // Draw the text
 
-		ctx.fillStyle = "black"; // Text color
-		ctx.font = "16px Arial"; // Text font
-		ctx.textAlign = "center"; // Center-align text
-		ctx.textBaseline = "middle"; // Middle-align text
-		ctx.fillText(item.name, textX, textY); // Draw the text
+	//Erase inner slice
+	ctx.globalCompositeOperation = "destination-out";
+	ctx.beginPath();
+	ctx.moveTo(outerDistance, outerDistance);
+	ctx.arc(outerDistance, outerDistance, innerDistance, 0, Math.PI * 2);
+	ctx.closePath();
+	ctx.fillStyle = whiteColor;
+	ctx.fill();
 
-		startAngle = endAngle; // Update the start angle for the next slice
-	}
+	ctx.globalCompositeOperation = "source-over";
+}
 
-	return ctx;
+export function drawItems(canvas: HTMLCanvasElement, selector: WheelSelector) {
+	clearCanvas(canvas);
+	selector.items.forEach((_, idx) => drawItem(canvas, selector, idx));
 }
 
 export function drawLineFromCenter(
 	canvas: HTMLCanvasElement,
 	angle: number,
-	length: number
+	length: number,
+	color: string = whiteColor
 ) {
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
@@ -97,20 +116,15 @@ export function drawLineFromCenter(
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
 
-	// Convert angle from degrees to radians
-	const angleRadians = (angle * Math.PI) / 180;
-
 	// Calculate the endpoint of the line using trigonometry
-	const endX = centerX + length * Math.cos(angleRadians);
-	const endY = centerY + length * Math.sin(angleRadians);
-
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	const endX = centerX + length * Math.cos(angle);
+	const endY = centerY + length * Math.sin(angle);
 
 	// Draw the line
 	ctx.beginPath();
 	ctx.moveTo(centerX, centerY); // Start at the center of the canvas
 	ctx.lineTo(endX, endY); // Draw to the calculated endpoint
-	ctx.strokeStyle = "black"; // Set the line color
+	ctx.strokeStyle = color; // Set the line color
 	ctx.lineWidth = 2; // Set the line width
 	ctx.stroke(); // Render the line
 

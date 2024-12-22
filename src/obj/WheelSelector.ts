@@ -49,9 +49,14 @@ export class WheelSelector {
 		this.outerDistance = options.outerDistance!!;
 		this.innerDistance = options.innerDistance!!;
 	}
-
+	triggerSelected() {
+		if (this.selectedItemNo === null) return;
+		const item = this.items[this.selectedItemNo];
+		item.callBack();
+	}
 	activateSelector(x: number, y: number) {
 		if (this.isActive === true) return;
+		this.selectedItemNo = null;
 		this.clickedMousePos = { x, y };
 		this.cursorCanvas = makeCanvas(
 			document,
@@ -59,12 +64,8 @@ export class WheelSelector {
 			this.outerDistance * 2
 		);
 		disableIframePointerEvents(document);
-		drawItems(
-			this.cursorCanvas!!,
-			this.innerDistance,
-			this.outerDistance,
-			this.items
-		);
+		drawItems(this.cursorCanvas!!, this);
+
 		this.isActive = true;
 	}
 	deactivateSelector() {
@@ -72,9 +73,7 @@ export class WheelSelector {
 		removeCanvas(this.cursorCanvas!!);
 		restoreIframePointerEvents(document);
 		this.isActive = false;
-	}
-	selectItem(itemNo: number) {
-		this.selectedItemNo = itemNo;
+		this.triggerSelected();
 	}
 	updateItems(items: SelectorItem[]) {
 		this.selectedItemNo = null;

@@ -1,6 +1,6 @@
 import { SelectorOptions } from "../types/SelectorOptions";
 import { WheelSelector } from "./WheelSelector";
-import { makeCanvas, removeCanvas, drawLineFromCenter } from "../util/canvas";
+import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
 
 export class MouseWheelSelector extends WheelSelector {
 	mouseCanvas: HTMLCanvasElement | null = null;
@@ -27,7 +27,7 @@ export class MouseWheelSelector extends WheelSelector {
 	} {
 		const { x, y } = this.clickedMousePos!!;
 		const [dx, dy] = [ex - x, ey - y];
-		const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+		const angle = Math.atan2(dy, dx);
 		const length = Math.min(
 			Math.sqrt(dy * dy + dx * dx),
 			this.outerDistance
@@ -36,6 +36,33 @@ export class MouseWheelSelector extends WheelSelector {
 			angle,
 			length,
 		};
+	}
+	checkSelected({
+		angle,
+		length,
+	}: {
+		angle: number;
+		length: number;
+	}): number | null {
+		if (length < this.innerDistance) return null;
+
+		const normalizedAngle =
+			((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+		let startAngle = 0;
+		const angleStep = (2 * Math.PI) / this.items.length;
+
+		for (let idx = 0; idx < this.items.length; idx++) {
+			const endAngle = startAngle + angleStep;
+
+			if (normalizedAngle >= startAngle && normalizedAngle < endAngle) {
+				return idx;
+			}
+
+			startAngle = endAngle;
+		}
+
+		return null;
 	}
 	deactivateSelector() {
 		removeCanvas(this.mouseCanvas!!);
@@ -52,11 +79,13 @@ export class MouseWheelSelector extends WheelSelector {
 
 		document.addEventListener("mousemove", (event: MouseEvent) => {
 			if (this.clickedMousePos !== null) {
-				const { angle, length } = this.calculLine(
-					event.clientX,
-					event.clientY
+				const preSelected = this.selectedItemNo;
+				this.selectedItemNo = this.checkSelected(
+					this.calculLine(event.clientX, event.clientY)
 				);
-				drawLineFromCenter(this.mouseCanvas!!, angle, length);
+				if (preSelected !== this.selectedItemNo) {
+					drawItems(this.cursorCanvas!!, this);
+				}
 			}
 		});
 
