@@ -1,0 +1,39 @@
+{
+	"name": "@lhs7/wheel-selector",
+	"version": "0.1.0",
+	"description": "wheelselector-npm",
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "tsc",
+		"test": "ts-node ./src/index.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/LeeHanSeong7-npm/WheelSelector.git"
+	},
+	"keywords": [
+		"npm",
+		"wheelselector"
+	],
+	"author": "LeeHanSeong7",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/LeeHanSeong7-npm/WheelSelector/issues"
+	},
+	"homepage": "https://github.com/LeeHanSeong7-npm/WheelSelector#readme",
+	"devDependencies": {
+		"@types/node": "^22.10.2"
+	},
+	"dependencies": {
+		"undici-types": "^6.20.0"
+	},
+	"types": "./dist/index.d.ts",
+	"module": "./dist/index.js",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	}
+}
