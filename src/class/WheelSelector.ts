@@ -10,8 +10,8 @@ import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
 export class WheelSelector {
 	isActive: Boolean = false;
 	isLeftClicked: Boolean = false;
+	position: Position | null = null;
 	items: SelectorItem[] = [];
-	clickedMousePos: Position | null = null;
 	selectedItemNo: number | null = null;
 	outerDistance: number = 0;
 	innerDistance: number = 0;
@@ -52,12 +52,11 @@ export class WheelSelector {
 	triggerSelected() {
 		if (this.selectedItemNo === null) return;
 		const item = this.items[this.selectedItemNo];
+		this.selectedItemNo = null;
 		item.callBack();
 	}
 	activateSelector(x: number, y: number) {
 		if (this.isActive === true) return;
-		this.selectedItemNo = null;
-		this.clickedMousePos = { x, y };
 		this.cursorCanvas = makeCanvas(
 			document,
 			{ x, y },
@@ -69,7 +68,6 @@ export class WheelSelector {
 		this.isActive = true;
 	}
 	deactivateSelector() {
-		this.clickedMousePos = null;
 		removeCanvas(this.cursorCanvas!!);
 		restoreIframePointerEvents(document);
 		this.isActive = false;

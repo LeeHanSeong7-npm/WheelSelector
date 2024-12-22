@@ -1,4 +1,4 @@
-import { WheelSelector } from "../obj/WheelSelector";
+import { WheelSelector } from "../class/WheelSelector";
 import { Position } from "../types/Position";
 
 const whiteColor = "rgba(255, 255, 255, 1)";

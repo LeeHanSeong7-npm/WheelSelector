@@ -11,12 +11,13 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 
 	activateSelector(x: number, y: number) {
-		super.activateSelector(x, y);
+		this.position = { x, y };
 		this.mouseCanvas = makeCanvas(
 			document,
 			{ x, y },
 			this.outerDistance * 2
 		);
+		super.activateSelector(x, y);
 	}
 	calculLine(
 		ex: number,
@@ -25,13 +26,10 @@ export class MouseWheelSelector extends WheelSelector {
 		angle: number;
 		length: number;
 	} {
-		const { x, y } = this.clickedMousePos!!;
+		const { x, y } = this.position!!;
 		const [dx, dy] = [ex - x, ey - y];
 		const angle = Math.atan2(dy, dx);
-		const length = Math.min(
-			Math.sqrt(dy * dy + dx * dx),
-			this.outerDistance
-		);
+		const length = Math.sqrt(dy * dy + dx * dx);
 		return {
 			angle,
 			length,
@@ -44,7 +42,9 @@ export class MouseWheelSelector extends WheelSelector {
 		angle: number;
 		length: number;
 	}): number | null {
-		if (length < this.innerDistance) return null;
+		if (length < this.innerDistance)
+			// || length > this.outerDistance * 2)
+			return null;
 
 		const normalizedAngle =
 			((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -66,6 +66,7 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 	deactivateSelector() {
 		removeCanvas(this.mouseCanvas!!);
+		this.position = null;
 		super.deactivateSelector();
 	}
 	listenMouseEvents(document: Document) {
@@ -78,7 +79,7 @@ export class MouseWheelSelector extends WheelSelector {
 		});
 
 		document.addEventListener("mousemove", (event: MouseEvent) => {
-			if (this.clickedMousePos !== null) {
+			if (this.position !== null) {
 				const preSelected = this.selectedItemNo;
 				this.selectedItemNo = this.checkSelected(
 					this.calculLine(event.clientX, event.clientY)
