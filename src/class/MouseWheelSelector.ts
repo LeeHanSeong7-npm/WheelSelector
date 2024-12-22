@@ -11,7 +11,6 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 
 	activateSelector(x: number, y: number) {
-		this.position = { x, y };
 		this.mouseCanvas = makeCanvas(
 			document,
 			{ x, y },
@@ -66,7 +65,6 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 	deactivateSelector() {
 		removeCanvas(this.mouseCanvas!!);
-		this.position = null;
 		super.deactivateSelector();
 	}
 	listenMouseEvents(document: Document) {

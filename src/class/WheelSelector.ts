@@ -57,6 +57,7 @@ export class WheelSelector {
 	}
 	activateSelector(x: number, y: number) {
 		if (this.isActive === true) return;
+		this.position = { x, y };
 		this.cursorCanvas = makeCanvas(
 			document,
 			{ x, y },
@@ -70,6 +71,7 @@ export class WheelSelector {
 	deactivateSelector() {
 		removeCanvas(this.cursorCanvas!!);
 		restoreIframePointerEvents(document);
+		this.position = null;
 		this.isActive = false;
 		this.triggerSelected();
 	}

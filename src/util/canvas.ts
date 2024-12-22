@@ -26,6 +26,7 @@ export function makeCanvas(
 }
 
 export function removeCanvas(canvas: HTMLCanvasElement) {
+	if (canvas === null) return;
 	canvas.remove();
 }
 
