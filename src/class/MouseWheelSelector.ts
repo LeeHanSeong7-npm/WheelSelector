@@ -1,5 +1,9 @@
 import { SelectorOptions } from "../types/SelectorOptions";
 import { WheelSelector } from "./WheelSelector";
+import {
+	disableIframePointerEvents,
+	restoreIframePointerEvents,
+} from "../util/iframe";
 import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
 
 export class MouseWheelSelector extends WheelSelector {
@@ -16,6 +20,7 @@ export class MouseWheelSelector extends WheelSelector {
 			{ x, y },
 			this.outerDistance * 2
 		);
+		disableIframePointerEvents(document);
 		super.activateSelector(x, y);
 	}
 	calculLine(
@@ -65,6 +70,7 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 	deactivateSelector() {
 		removeCanvas(this.mouseCanvas!!);
+		restoreIframePointerEvents(document);
 		super.deactivateSelector();
 	}
 	listenMouseEvents(document: Document) {

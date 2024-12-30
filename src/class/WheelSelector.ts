@@ -1,10 +1,6 @@
 import { SelectorItem } from "../types/SelectorItem";
 import { SelectorOptions } from "../types/SelectorOptions";
 import { Position } from "../types/Position";
-import {
-	disableIframePointerEvents,
-	restoreIframePointerEvents,
-} from "../util/iframe";
 import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
 
 export class WheelSelector {
@@ -63,14 +59,12 @@ export class WheelSelector {
 			{ x, y },
 			this.outerDistance * 2
 		);
-		disableIframePointerEvents(document);
 		drawItems(this.cursorCanvas!!, this);
 
 		this.isActive = true;
 	}
 	deactivateSelector() {
 		removeCanvas(this.cursorCanvas!!);
-		restoreIframePointerEvents(document);
 		this.position = null;
 		this.isActive = false;
 		this.triggerSelected();
@@ -79,5 +73,16 @@ export class WheelSelector {
 		this.selectedItemNo = null;
 		this.items = items;
 		return this.items;
+	}
+	redraw() {
+		if (this.isActive === false) return;
+		const { x, y } = this.position!!;
+		removeCanvas(this.cursorCanvas!!);
+		this.cursorCanvas = makeCanvas(
+			document,
+			{ x, y },
+			this.outerDistance * 2
+		);
+		drawItems(this.cursorCanvas!!, this);
 	}
 }
