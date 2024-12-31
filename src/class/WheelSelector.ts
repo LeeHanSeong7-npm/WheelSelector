@@ -49,7 +49,7 @@ export class WheelSelector {
 		if (this.selectedItemNo === null) return;
 		const item = this.items[this.selectedItemNo];
 		this.selectedItemNo = null;
-		item.callBack();
+		item.callback();
 	}
 	activateSelector(x: number, y: number) {
 		if (this.isActive === true) return;

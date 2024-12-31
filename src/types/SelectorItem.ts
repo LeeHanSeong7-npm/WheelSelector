@@ -1,4 +1,4 @@
 export interface SelectorItem {
 	name: string;
-	callBack: Function;
+	callback: Function;
 }
