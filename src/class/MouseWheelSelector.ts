@@ -43,7 +43,7 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 
 	activateSelector(x: number, y: number) {
-		disableIframePointerEvents(document);
+		disableIframePointerEvents();
 		super.activateSelector(x, y);
 	}
 	calculLine(
@@ -92,7 +92,7 @@ export class MouseWheelSelector extends WheelSelector {
 		return null;
 	}
 	deactivateSelector() {
-		restoreIframePointerEvents(document);
+		restoreIframePointerEvents();
 		super.deactivateSelector();
 		this.triggerSelected();
 	}
