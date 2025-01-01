@@ -6,11 +6,7 @@ const blackColor = "rgba(0, 0, 0, 1)";
 const defaultColor = "rgba(0, 0, 0, 0.7)";
 const selectedColor = "rgba(126, 221, 17, 0.7)";
 
-export function makeCanvas(
-	document: Document,
-	pos: Position,
-	size: number
-): HTMLCanvasElement {
+export function makeCanvas(pos: Position, size: number): HTMLCanvasElement {
 	const canvas = document.createElement("canvas");
 
 	canvas.style.position = "fixed";
@@ -26,8 +22,9 @@ export function makeCanvas(
 }
 
 export function removeCanvas(canvas: HTMLCanvasElement) {
-	if (canvas === null) return;
-	canvas.remove();
+	if (canvas) {
+		document.body.removeChild(canvas);
+	}
 }
 
 export function clearCanvas(canvas: HTMLCanvasElement) {

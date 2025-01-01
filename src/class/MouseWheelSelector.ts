@@ -7,7 +7,6 @@ import {
 import { drawItems } from "../util/canvas";
 
 export class MouseWheelSelector extends WheelSelector {
-	ownerDocument: Document | null = null;
 	eventHandlers = {
 		mousedown: (event: MouseEvent) => {
 			if (event.button === 0) this.isLeftClicked = true;
@@ -38,9 +37,8 @@ export class MouseWheelSelector extends WheelSelector {
 			if (this.isLeftClicked === true) event.preventDefault();
 		},
 	};
-	constructor(document: Document, options?: SelectorOptions) {
+	constructor(options?: SelectorOptions) {
 		super(options);
-		this.ownerDocument = document;
 		this.addMouseEvents();
 	}
 
@@ -99,15 +97,15 @@ export class MouseWheelSelector extends WheelSelector {
 		this.triggerSelected();
 	}
 	addMouseEvents() {
-		if (this.ownerDocument === null) return;
+		if (document === null) return;
 		for (const [event, handler] of Object.entries(this.eventHandlers)) {
-			this.ownerDocument.addEventListener(event as any, handler);
+			document.addEventListener(event as any, handler);
 		}
 	}
 	removeMouseEvents() {
-		if (this.ownerDocument === null) return;
+		if (document === null) return;
 		for (const [event, handler] of Object.entries(this.eventHandlers)) {
-			this.ownerDocument.removeEventListener(event as any, handler);
+			document.removeEventListener(event as any, handler);
 		}
 	}
 }

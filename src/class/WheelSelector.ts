@@ -45,11 +45,11 @@ export class WheelSelector {
 		this.outerDistance = options.outerDistance!!;
 		this.innerDistance = options.innerDistance!!;
 	}
-
 	activateSelector(x: number, y: number) {
-		if (this.isActive === true) return;
+		this.deactivateSelector();
 		this.position = { x, y };
-		this.redraw();
+		this.cursorCanvas = makeCanvas({ x, y }, this.outerDistance * 2);
+		drawItems(this.cursorCanvas!!, this);
 		this.isActive = true;
 	}
 	deactivateSelector() {
@@ -65,19 +65,12 @@ export class WheelSelector {
 	};
 	redraw() {
 		if (this.position === null) return;
-		removeCanvas(this.cursorCanvas!!);
 		const { x, y } = this.position;
-		this.cursorCanvas = makeCanvas(
-			document,
-			{ x, y },
-			this.outerDistance * 2
-		);
-		drawItems(this.cursorCanvas!!, this);
+		this.activateSelector(x, y);
 	}
 	updateItems(items: SelectorItem[]) {
 		this.selectedItemNo = null;
 		this.items = items;
-		this.redraw();
 		return this.items;
 	}
 }
