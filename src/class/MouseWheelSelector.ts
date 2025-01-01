@@ -4,22 +4,47 @@ import {
 	disableIframePointerEvents,
 	restoreIframePointerEvents,
 } from "../util/iframe";
-import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
+import { drawItems } from "../util/canvas";
 
 export class MouseWheelSelector extends WheelSelector {
-	mouseCanvas: HTMLCanvasElement | null = null;
+	ownerDocument: Document | null = null;
+	eventHandlers = {
+		mousedown: (event: MouseEvent) => {
+			if (event.button === 0) this.isLeftClicked = true;
+			if (event.button === 2 && this.isLeftClicked) {
+				event.preventDefault();
+				this.activateSelector(event.clientX, event.clientY);
+			}
+		},
+		mousemove: (event: MouseEvent) => {
+			if (this.position !== null) {
+				const preSelected = this.selectedItemNo;
+				this.selectedItemNo = this.checkSelected(
+					this.calculLine(event.clientX, event.clientY)
+				);
+				if (preSelected !== this.selectedItemNo) {
+					drawItems(this.cursorCanvas!!, this);
+				}
+			}
+		},
+		mouseup: (event: MouseEvent) => {
+			if (event.button === 0) this.isLeftClicked = false;
 
+			this.deactivateSelector();
+		},
+		//touchstart: (event: TouchEvent) => {},
+		//touchend: (event: TouchEvent) => {},
+		contextmenu: (event: MouseEvent) => {
+			if (this.isLeftClicked === true) event.preventDefault();
+		},
+	};
 	constructor(document: Document, options?: SelectorOptions) {
 		super(options);
-		this.listenMouseEvents(document);
+		this.ownerDocument = document;
+		this.addMouseEvents();
 	}
 
 	activateSelector(x: number, y: number) {
-		this.mouseCanvas = makeCanvas(
-			document,
-			{ x, y },
-			this.outerDistance * 2
-		);
 		disableIframePointerEvents(document);
 		super.activateSelector(x, y);
 	}
@@ -69,43 +94,20 @@ export class MouseWheelSelector extends WheelSelector {
 		return null;
 	}
 	deactivateSelector() {
-		removeCanvas(this.mouseCanvas!!);
 		restoreIframePointerEvents(document);
 		super.deactivateSelector();
+		this.triggerSelected();
 	}
-	listenMouseEvents(document: Document) {
-		document.addEventListener("mousedown", (event: MouseEvent) => {
-			if (event.button === 0) this.isLeftClicked = true;
-			if (event.button === 2 && this.isLeftClicked) {
-				event.preventDefault();
-				this.activateSelector(event.clientX, event.clientY);
-			}
-		});
-
-		document.addEventListener("mousemove", (event: MouseEvent) => {
-			if (this.position !== null) {
-				const preSelected = this.selectedItemNo;
-				this.selectedItemNo = this.checkSelected(
-					this.calculLine(event.clientX, event.clientY)
-				);
-				if (preSelected !== this.selectedItemNo) {
-					drawItems(this.cursorCanvas!!, this);
-				}
-			}
-		});
-
-		document.addEventListener("mouseup", (event: MouseEvent) => {
-			if (event.button === 0) this.isLeftClicked = false;
-
-			this.deactivateSelector();
-		});
-
-		//document.addEventListener("touchstart", (event: TouchEvent) => {});
-
-		//document.addEventListener("touchend", (event: TouchEvent) => {});
-
-		document.addEventListener("contextmenu", (event: MouseEvent) => {
-			if (this.isLeftClicked === true) event.preventDefault();
-		});
+	addMouseEvents() {
+		if (this.ownerDocument === null) return;
+		for (const [event, handler] of Object.entries(this.eventHandlers)) {
+			this.ownerDocument.addEventListener(event as any, handler);
+		}
+	}
+	removeMouseEvents() {
+		if (this.ownerDocument === null) return;
+		for (const [event, handler] of Object.entries(this.eventHandlers)) {
+			this.ownerDocument.removeEventListener(event as any, handler);
+		}
 	}
 }

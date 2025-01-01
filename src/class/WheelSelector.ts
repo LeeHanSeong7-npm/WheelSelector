@@ -45,44 +45,39 @@ export class WheelSelector {
 		this.outerDistance = options.outerDistance!!;
 		this.innerDistance = options.innerDistance!!;
 	}
-	triggerSelected() {
-		if (this.selectedItemNo === null) return;
-		const item = this.items[this.selectedItemNo];
-		this.selectedItemNo = null;
-		item.callback();
-	}
+
 	activateSelector(x: number, y: number) {
 		if (this.isActive === true) return;
 		this.position = { x, y };
-		this.cursorCanvas = makeCanvas(
-			document,
-			{ x, y },
-			this.outerDistance * 2
-		);
-		drawItems(this.cursorCanvas!!, this);
-
+		this.redraw();
 		this.isActive = true;
 	}
 	deactivateSelector() {
 		removeCanvas(this.cursorCanvas!!);
 		this.position = null;
 		this.isActive = false;
-		this.triggerSelected();
 	}
-	updateItems(items: SelectorItem[]) {
+	triggerSelected = () => {
+		if (this.selectedItemNo === null) return;
+		const item = this.items[this.selectedItemNo];
 		this.selectedItemNo = null;
-		this.items = items;
-		return this.items;
-	}
+		item.callback();
+	};
 	redraw() {
-		if (this.isActive === false) return;
-		const { x, y } = this.position!!;
+		if (this.position === null) return;
 		removeCanvas(this.cursorCanvas!!);
+		const { x, y } = this.position;
 		this.cursorCanvas = makeCanvas(
 			document,
 			{ x, y },
 			this.outerDistance * 2
 		);
 		drawItems(this.cursorCanvas!!, this);
+	}
+	updateItems(items: SelectorItem[]) {
+		this.selectedItemNo = null;
+		this.items = items;
+		this.redraw();
+		return this.items;
 	}
 }
