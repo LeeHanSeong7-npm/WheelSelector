@@ -21,10 +21,8 @@ export function makeCanvas(pos: Position, size: number): HTMLCanvasElement {
 	return canvas;
 }
 
-export function removeCanvas(canvas: HTMLCanvasElement) {
-	if (canvas) {
-		document.body.removeChild(canvas);
-	}
+export function removeCanvas(canvas?: HTMLCanvasElement) {
+	if (canvas) canvas.remove();
 }
 
 export function clearCanvas(canvas: HTMLCanvasElement) {
