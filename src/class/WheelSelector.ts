@@ -46,7 +46,7 @@ export class WheelSelector {
 		this.innerDistance = options.innerDistance!!;
 	}
 	activateSelector(x: number, y: number) {
-		this.deactivateSelector();
+		WheelSelector.prototype.deactivateSelector.call(this);
 		this.position = { x, y };
 		this.cursorCanvas = makeCanvas({ x, y }, this.outerDistance * 2);
 		drawItems(this.cursorCanvas!!, this);

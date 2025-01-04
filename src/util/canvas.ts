@@ -13,7 +13,7 @@ export function makeCanvas(pos: Position, size: number): HTMLCanvasElement {
 	canvas.style.left = `${pos.x - size / 2}px`;
 	canvas.style.top = `${pos.y - size / 2}px`;
 	canvas.style.pointerEvents = "none"; // Make sure it doesn't block mouse events
-	canvas.style.zIndex = "100";
+	canvas.style.zIndex = "10000";
 	canvas.width = size;
 	canvas.height = size;
 
