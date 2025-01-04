@@ -10,6 +10,7 @@ npm i @lhs7/wheel-selector
 
 ```jsx
 import { MouseWheelSelector } from "@lhs7/wheel-selector";
+import { loadList } from "./loadList"
 
 let wheelSelector = new MouseWheelSelector({ items: [] });
 function load() {
@@ -18,7 +19,7 @@ function load() {
 			return {
 				name: item.name,
 				callback: () => {
-					alert(item.url);
+					alert(item.name);
 				},
 			};
 		});
