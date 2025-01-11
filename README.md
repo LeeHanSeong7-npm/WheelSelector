@@ -12,23 +12,35 @@ npm i @lhs7/wheel-selector
 import { MouseWheelSelector } from "@lhs7/wheel-selector";
 import { loadList } from "./loadList"
 
-let wheelSelector = new MouseWheelSelector({ items: [] });
+//	•	Activate Selector With Mouse: Right-click after a left-click.
+//	•	Deactivate Selector: Release the mouse button (mouseup) or call deactivateSelector().
+let wheelSelector = new MouseWheelSelector({
+	items: [],
+	activateKey: "Escape",	//	•	Activate Key for Selector
+	theme: {
+		defaultColor: "rgba(0, 0, 0, 0.7)",		//	•	NonSelected Item Color
+		selectedColor: "rgba(125, 220, 0, 0.7)",	//	•	Selected Item Color
+	},
+});
 function load() {
-	loadList().then((items[]) => {
-		items = items.map((item) => {
+	loadList().then((items: CursorItem[]) => {
+		items = items.map((item: CursorItem) => {
 			return {
 				name: item.name,
 				callback: () => {
-					alert(item.name);
+					chrome.runtime.sendMessage(item);
 				},
 			};
 		});
 
-		wheelSelector.updateItems(items);
+		wheelSelector.updateItems(items as any);
 	});
 }
 
 load();
+
+chrome.storage.onChanged.addListener(load);
+
 ```
 
 ## License

@@ -1,6 +1,7 @@
 import { SelectorItem } from "../types/SelectorItem";
 import { SelectorOptions } from "../types/SelectorOptions";
 import { Position } from "../types/Position";
+import { Theme } from "../types/ThemeOptions";
 import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
 
 export class WheelSelector {
@@ -12,6 +13,10 @@ export class WheelSelector {
 	outerDistance: number = 0;
 	innerDistance: number = 0;
 	cursorCanvas: HTMLCanvasElement | null = null;
+	theme: Theme = {
+		defaultColor: "rgba(0, 0, 0, 0.7)",
+		selectedColor: "rgba(125, 220, 0, 0.7)",
+	};
 
 	constructor(options?: SelectorOptions) {
 		if (options !== undefined) {
@@ -34,6 +39,11 @@ export class WheelSelector {
 			}
 			options.outerDistance = outerDistance;
 			options.innerDistance = innerDistance;
+
+			let { theme } = options;
+			if (theme) {
+				Object.assign(this.theme, theme);
+			}
 		}
 		options = Object.assign(
 			{

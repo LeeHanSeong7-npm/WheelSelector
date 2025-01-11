@@ -1,13 +1,38 @@
-import { SelectorOptions } from "../types/SelectorOptions";
 import { WheelSelector } from "./WheelSelector";
 import {
 	disableIframePointerEvents,
 	restoreIframePointerEvents,
-} from "../util/iframe";
-import { drawItems } from "../util/canvas";
+} from "../util/events";
+import { drawItems, drawCancelButton } from "../util/canvas";
+import { MouseSelectorOptions } from "../types/SelectorOptions";
 
 export class MouseWheelSelector extends WheelSelector {
+	isLeftClicked: Boolean = false;
+	activateKey: string | null = null;
+
 	eventHandlers = {
+		keydown: (event: KeyboardEvent) => {
+			if (event.key === this.activateKey) {
+				const centerX = window.innerWidth / 2;
+				const centerY = window.innerHeight / 2;
+
+				this.activateSelector(centerX, centerY);
+			}
+		},
+		keyup: (event: KeyboardEvent) => {
+			if (event.key === this.activateKey) {
+				this.deactivateSelector();
+			}
+		},
+		click: (event: MouseEvent) => {
+			if (this.isActive) {
+				event.preventDefault();
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+				//클릭이벤트 중복 처리를 막기위해 더 뒤에서 처리되는 click에서 처리
+				this.deactivateSelector();
+			}
+		},
 		mousedown: (event: MouseEvent) => {
 			if (event.button === 0) this.isLeftClicked = true;
 			if (event.button === 2 && this.isLeftClicked) {
@@ -22,29 +47,36 @@ export class MouseWheelSelector extends WheelSelector {
 					this.calculLine(event.clientX, event.clientY)
 				);
 				if (preSelected !== this.selectedItemNo) {
-					drawItems(this.cursorCanvas!!, this);
+					drawItems(this.cursorCanvas!!, this, [drawCancelButton]);
 				}
 			}
 		},
 		mouseup: (event: MouseEvent) => {
-			if (event.button === 0) this.isLeftClicked = false;
-
-			this.deactivateSelector();
+			if (this.isActive) {
+				event.preventDefault();
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+				if (event.button === 2) this.deactivateSelector();
+			}
+			if (event.button === 0) {
+				this.isLeftClicked = false;
+			}
 		},
-		//touchstart: (event: TouchEvent) => {},
-		//touchend: (event: TouchEvent) => {},
 		contextmenu: (event: MouseEvent) => {
 			if (this.isLeftClicked === true) event.preventDefault();
 		},
 	};
-	constructor(options?: SelectorOptions) {
+	constructor(options?: MouseSelectorOptions) {
 		super(options);
-		this.addMouseEvents();
+		if (options)
+			this.activateKey = options.activateKey ? options.activateKey : null;
+		this.addEventHandlers();
 	}
 
 	activateSelector(x: number, y: number) {
 		disableIframePointerEvents(document);
 		super.activateSelector(x, y);
+		drawCancelButton(this.cursorCanvas!!, this);
 	}
 	calculLine(
 		ex: number,
@@ -96,16 +128,16 @@ export class MouseWheelSelector extends WheelSelector {
 		super.deactivateSelector();
 		this.triggerSelected();
 	}
-	addMouseEvents() {
+	addEventHandlers() {
 		if (document === null) return;
 		for (const [event, handler] of Object.entries(this.eventHandlers)) {
-			document.addEventListener(event as any, handler);
+			document.addEventListener(event as any, handler, true);
 		}
 	}
-	removeMouseEvents() {
+	removeEventHandlers() {
 		if (document === null) return;
 		for (const [event, handler] of Object.entries(this.eventHandlers)) {
-			document.removeEventListener(event as any, handler);
+			document.removeEventListener(event as any, handler, true);
 		}
 	}
 }

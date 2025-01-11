@@ -1,10 +1,9 @@
 import { WheelSelector } from "../class/WheelSelector";
 import { Position } from "../types/Position";
 
-const whiteColor = "rgba(255, 255, 255, 1)";
-const blackColor = "rgba(0, 0, 0, 1)";
-const defaultColor = "rgba(0, 0, 0, 0.7)";
-const selectedColor = "rgba(126, 221, 17, 0.7)";
+const whiteColor: string = "rgba(255, 255, 255, 1)";
+const blackColor: string = "rgba(0, 0, 0, 1)";
+const transparentColor: string = "rgba(0, 0, 0, 0)";
 
 export function makeCanvas(pos: Position, size: number): HTMLCanvasElement {
 	const canvas = document.createElement("canvas");
@@ -41,6 +40,7 @@ export function drawItem(
 	if (itemNo === null) return;
 
 	const { items, outerDistance, innerDistance, selectedItemNo } = selector;
+	const { selectedColor, defaultColor } = selector.theme;
 	const item = items[itemNo];
 
 	const itemCount = items.length;
@@ -63,12 +63,13 @@ export function drawItem(
 	ctx.moveTo(outerDistance, outerDistance);
 	ctx.arc(outerDistance, outerDistance, outerDistance, startAngle, endAngle);
 	ctx.closePath();
-	ctx.fillStyle = selectedItemNo === itemNo ? selectedColor : defaultColor; // Assign item color or default
+	ctx.fillStyle =
+		selectedItemNo === itemNo ? selectedColor!! : defaultColor!!; // Assign item color or default
 	ctx.fill();
 
 	ctx.globalCompositeOperation = "source-over";
-	drawLineFromCenter(canvas, startAngle, outerDistance);
-	drawLineFromCenter(canvas, endAngle, outerDistance);
+	drawLineFromCenter(canvas, startAngle, outerDistance, whiteColor);
+	drawLineFromCenter(canvas, endAngle, outerDistance, whiteColor);
 
 	// Add the label
 	const midAngle = startAngle + angleStep / 2; // Find the midpoint of the slice
@@ -94,16 +95,41 @@ export function drawItem(
 	ctx.globalCompositeOperation = "source-over";
 }
 
-export function drawItems(canvas: HTMLCanvasElement, selector: WheelSelector) {
+export function drawItems(
+	canvas: HTMLCanvasElement,
+	selector: WheelSelector,
+	after: Function[] = []
+) {
 	clearCanvas(canvas);
 	selector.items.forEach((_, idx) => drawItem(canvas, selector, idx));
+	after.forEach((e) => e(canvas, selector));
 }
 
-export function drawLineFromCenter(
+export function drawCancelButton(
+	canvas: HTMLCanvasElement,
+	selector: WheelSelector
+) {
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+
+	const { outerDistance, innerDistance, selectedItemNo } = selector;
+	const { selectedColor } = selector.theme;
+
+	ctx.globalCompositeOperation = "source-over";
+	ctx.beginPath();
+	ctx.moveTo(outerDistance, outerDistance);
+	ctx.arc(outerDistance, outerDistance, innerDistance, 0, Math.PI * 2);
+	ctx.closePath();
+	ctx.fillStyle =
+		selectedItemNo === null ? selectedColor!! : transparentColor; // Assign item color or default
+	ctx.fill();
+}
+
+function drawLineFromCenter(
 	canvas: HTMLCanvasElement,
 	angle: number,
 	length: number,
-	color: string = whiteColor
+	color: string
 ) {
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
