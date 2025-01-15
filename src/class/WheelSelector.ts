@@ -2,7 +2,12 @@ import { SelectorItem } from "../types/SelectorItem";
 import { SelectorOptions } from "../types/SelectorOptions";
 import { Position } from "../types/Position";
 import { Theme } from "../types/ThemeOptions";
-import { makeCanvas, removeCanvas, drawItems } from "../util/canvas";
+import {
+	makeCanvas,
+	removeCanvas,
+	drawItems,
+	drawCancelButton,
+} from "../util/canvas";
 
 export class WheelSelector {
 	isActive: Boolean = false;
@@ -10,8 +15,8 @@ export class WheelSelector {
 	position: Position | null = null;
 	items: SelectorItem[] = [];
 	selectedItemNo: number | null = null;
-	outerDistance: number = 0;
-	innerDistance: number = 0;
+	outerDistance: number = 200;
+	innerDistance: number = 100;
 	cursorCanvas: HTMLCanvasElement | null = null;
 	theme: Theme = {
 		defaultColor: "rgba(0, 0, 0, 0.7)",
@@ -25,8 +30,8 @@ export class WheelSelector {
 				if (innerDistance !== undefined)
 					throw new Error("give outerDistance value");
 				else {
-					outerDistance = 200;
-					innerDistance = 100;
+					outerDistance = this.outerDistance;
+					innerDistance = this.innerDistance;
 				}
 			} else {
 				if (innerDistance === undefined) {
@@ -55,32 +60,38 @@ export class WheelSelector {
 		this.outerDistance = options.outerDistance!!;
 		this.innerDistance = options.innerDistance!!;
 	}
-	activateSelector(x: number, y: number) {
+	activateSelector(pos: Position) {
+		this.position = pos;
 		WheelSelector.prototype.deactivateSelector.call(this);
-		this.position = { x, y };
-		this.cursorCanvas = makeCanvas({ x, y }, this.outerDistance * 2);
-		drawItems(this.cursorCanvas!!, this);
+		this.cursorCanvas = makeCanvas(this.position, this.outerDistance * 2);
+		this.redraw();
 		this.isActive = true;
 	}
 	deactivateSelector() {
-		removeCanvas(this.cursorCanvas!!);
-		this.position = null;
+		if (this.cursorCanvas !== null) removeCanvas(this.cursorCanvas);
 		this.isActive = false;
 	}
-	triggerSelected = () => {
+	triggerSelected() {
 		if (this.selectedItemNo === null) return;
 		const item = this.items[this.selectedItemNo];
 		this.selectedItemNo = null;
 		item.callback();
-	};
+	}
 	redraw() {
 		if (this.position === null) return;
-		const { x, y } = this.position;
-		this.activateSelector(x, y);
+		if (this.items.length === 0) return;
+		drawItems(this.cursorCanvas!!, this, [drawCancelButton]);
 	}
-	updateItems(items: SelectorItem[]) {
+	selectItem(itemno: number | null) {
+		if (itemno !== null && this.items[itemno] === undefined)
+			throw Error("invalid item number");
+		this.selectedItemNo = itemno;
+		this.redraw();
+	}
+	updateItems(items?: SelectorItem[]) {
 		this.selectedItemNo = null;
-		this.items = items;
+		this.items = items ? items : [];
+		this.redraw();
 		return this.items;
 	}
 }

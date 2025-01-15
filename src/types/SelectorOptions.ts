@@ -2,7 +2,7 @@ import { SelectorItem } from "./SelectorItem";
 import { Theme } from "./ThemeOptions";
 
 export interface SelectorOptions {
-	items: SelectorItem[];
+	items?: SelectorItem[];
 	outerDistance?: number;
 	innerDistance?: number;
 	theme?: Theme;

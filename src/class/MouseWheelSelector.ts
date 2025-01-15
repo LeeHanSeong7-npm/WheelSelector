@@ -3,8 +3,8 @@ import {
 	disableIframePointerEvents,
 	restoreIframePointerEvents,
 } from "../util/events";
-import { drawItems, drawCancelButton } from "../util/canvas";
 import { MouseSelectorOptions } from "../types/SelectorOptions";
+import { Position } from "../types/Position";
 
 export class MouseWheelSelector extends WheelSelector {
 	isLeftClicked: Boolean = false;
@@ -16,7 +16,7 @@ export class MouseWheelSelector extends WheelSelector {
 				const centerX = window.innerWidth / 2;
 				const centerY = window.innerHeight / 2;
 
-				this.activateSelector(centerX, centerY);
+				this.activateSelector({ x: centerX, y: centerY });
 			}
 		},
 		keyup: (event: KeyboardEvent) => {
@@ -37,7 +37,7 @@ export class MouseWheelSelector extends WheelSelector {
 			if (event.button === 0) this.isLeftClicked = true;
 			if (event.button === 2 && this.isLeftClicked) {
 				event.preventDefault();
-				this.activateSelector(event.clientX, event.clientY);
+				this.activateSelector({ x: event.clientX, y: event.clientY });
 			}
 		},
 		mousemove: (event: MouseEvent) => {
@@ -47,7 +47,7 @@ export class MouseWheelSelector extends WheelSelector {
 					this.calculLine(event.clientX, event.clientY)
 				);
 				if (preSelected !== this.selectedItemNo) {
-					drawItems(this.cursorCanvas!!, this, [drawCancelButton]);
+					this.redraw();
 				}
 			}
 		},
@@ -73,10 +73,9 @@ export class MouseWheelSelector extends WheelSelector {
 		this.addEventHandlers();
 	}
 
-	activateSelector(x: number, y: number) {
+	activateSelector({ x, y }: Position) {
 		disableIframePointerEvents(document);
-		super.activateSelector(x, y);
-		drawCancelButton(this.cursorCanvas!!, this);
+		super.activateSelector({ x, y });
 	}
 	calculLine(
 		ex: number,

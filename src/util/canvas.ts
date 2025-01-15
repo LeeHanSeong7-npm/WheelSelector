@@ -81,7 +81,7 @@ export function drawItem(
 	ctx.font = "16px Arial"; // Text font
 	ctx.textAlign = "center"; // Center-align text
 	ctx.textBaseline = "middle"; // Middle-align text
-	ctx.fillText(item.name, textX, textY); // Draw the text
+	ctx.fillText(item.name ?? "", textX, textY); // Draw the text
 
 	//Erase inner slice
 	ctx.globalCompositeOperation = "destination-out";
