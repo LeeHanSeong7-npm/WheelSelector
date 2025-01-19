@@ -114,8 +114,8 @@ export class WheelSelectorEditor extends WheelSelector {
 
 		//드래그 상태이면 이전 상태로 덮어씌우고 시작
 		if (this.draggingItem !== null) this.items = this.preItems.slice();
-		if (length < this.innerDistance) return "CANCEL";
-		else if (length > this.outerDistance) return null;
+		//if (length < this.innerDistance) return "CANCEL";
+		if (length > this.outerDistance) return null;
 
 		const normalizedAngle =
 			((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);

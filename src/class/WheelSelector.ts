@@ -79,7 +79,7 @@ export class WheelSelector {
 	}
 	redraw() {
 		if (this.position === null) return;
-		drawItems(this, [drawCancelButton]);
+		drawItems(this);
 	}
 	selectItem(itemno: number | null) {
 		if (itemno !== null && this.items[itemno] === undefined)

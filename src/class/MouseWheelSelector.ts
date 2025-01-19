@@ -1,7 +1,9 @@
 import { WheelSelector } from "./WheelSelector";
 import {
 	disableIframePointerEvents,
+	hideMouseCursor,
 	restoreIframePointerEvents,
+	showMouseCursor,
 } from "../util/events";
 import { MouseSelectorOptions } from "../types/SelectorOptions";
 import { Position } from "../types/Position";
@@ -9,18 +11,24 @@ import { Position } from "../types/Position";
 export class MouseWheelSelector extends WheelSelector {
 	isLeftClicked: Boolean = false;
 	activateKey: string | null = null;
-
+	startPos: Position | null = null;
+	lineInfo: {
+		angle: number;
+		length: number;
+	} | null = null;
 	eventHandlers = {
 		keydown: (event: KeyboardEvent) => {
 			if (event.key === this.activateKey) {
 				const centerX = window.innerWidth / 2;
 				const centerY = window.innerHeight / 2;
 
+				hideMouseCursor(document);
 				this.activateSelector({ x: centerX, y: centerY });
 			}
 		},
 		keyup: (event: KeyboardEvent) => {
 			if (event.key === this.activateKey) {
+				showMouseCursor(document);
 				this.deactivateSelector();
 			}
 		},
@@ -41,15 +49,18 @@ export class MouseWheelSelector extends WheelSelector {
 			}
 		},
 		mousemove: (event: MouseEvent) => {
-			if (this.position !== null) {
-				const preSelected = this.selectedItemNo;
-				this.selectedItemNo = this.checkSelected(
-					this.calculLine(event.clientX, event.clientY)
-				);
-				if (preSelected !== this.selectedItemNo) {
-					this.redraw();
-				}
+			if (!this.isActive) {
+				this.startPos = { x: event.clientX, y: event.clientY };
+				return;
 			}
+			if (this.position === null) return null;
+			const { angle, length } = this.calculLine(
+				event.clientX,
+				event.clientY
+			);
+			this.selectedItemNo = this.checkSelected({ angle, length });
+			this.lineInfo = { angle, length };
+			this.redraw();
 		},
 		mouseup: (event: MouseEvent) => {
 			if (this.isActive) {
@@ -84,7 +95,7 @@ export class MouseWheelSelector extends WheelSelector {
 		angle: number;
 		length: number;
 	} {
-		const { x, y } = this.position!!;
+		const { x, y } = this.startPos!!;
 		const [dx, dy] = [ex - x, ey - y];
 		const angle = Math.atan2(dy, dx);
 		const length = Math.sqrt(dy * dy + dx * dx);
@@ -99,10 +110,8 @@ export class MouseWheelSelector extends WheelSelector {
 	}: {
 		angle: number;
 		length: number;
-	}): number | null {
-		if (length < this.innerDistance)
-			// || length > this.outerDistance * 2)
-			return null;
+	}): number | null | "CANCEL" {
+		if (length < this.innerDistance) return "CANCEL";
 
 		const normalizedAngle =
 			((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -124,6 +133,7 @@ export class MouseWheelSelector extends WheelSelector {
 	}
 	deactivateSelector() {
 		restoreIframePointerEvents(document);
+		this.lineInfo = null;
 		super.deactivateSelector();
 		this.triggerSelected();
 	}

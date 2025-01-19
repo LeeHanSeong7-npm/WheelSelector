@@ -1,3 +1,4 @@
+import { MouseWheelSelector } from "../class/MouseWheelSelector";
 import { WheelSelector } from "../class/WheelSelector";
 import { WheelSelectorEditor } from "../class/WheelSelectorEditor";
 import { Position } from "../types/Position";
@@ -109,7 +110,7 @@ export function drawItem(selector: WheelSelector, itemNo: number | null) {
 	ctx.globalCompositeOperation = "source-over";
 }
 
-export function drawItems(selector: WheelSelector, after: Function[] = []) {
+export function drawItems(selector: WheelSelector) {
 	const { cursorCanvas, outerDistance, innerDistance } = selector;
 	if (cursorCanvas === null) return;
 	clearCanvas(cursorCanvas);
@@ -118,7 +119,18 @@ export function drawItems(selector: WheelSelector, after: Function[] = []) {
 	drawCircleLine(cursorCanvas, outerDistance, 3, whiteColor);
 	drawCircleLine(cursorCanvas, innerDistance, 3, whiteColor);
 
-	after.forEach((e) => e(selector));
+	drawCancelButton(selector);
+
+	const { lineInfo } = selector as MouseWheelSelector;
+	if (lineInfo) {
+		drawLineFromCenter(
+			selector.cursorCanvas!!,
+			lineInfo.angle,
+			Math.min(lineInfo.length, selector.outerDistance),
+			"rgba(255, 255, 255, 1)",
+			5
+		);
+	}
 }
 
 export function drawCancelButton(selector: WheelSelector) {
@@ -127,20 +139,16 @@ export function drawCancelButton(selector: WheelSelector) {
 	const ctx = cursorCanvas.getContext("2d");
 	if (!ctx) return;
 
-	const { outerDistance, innerDistance, selectedItemNo, items } = selector;
+	const { outerDistance, innerDistance, selectedItemNo } = selector;
 	const { selectedColor, defaultColor } = selector.theme;
 
 	ctx.globalCompositeOperation = "source-over";
 	ctx.beginPath();
 	ctx.moveTo(outerDistance, outerDistance);
-	ctx.arc(outerDistance, outerDistance, innerDistance, 0, Math.PI * 2);
+	ctx.arc(outerDistance, outerDistance, innerDistance - 5, 0, Math.PI * 2);
 	ctx.closePath();
 	ctx.fillStyle =
-		selectedItemNo === "CANCEL"
-			? selectedColor!!
-			: items.length !== 0
-			? transparentColor
-			: defaultColor!!; // Assign item color or default
+		selectedItemNo === "CANCEL" ? selectedColor!! : defaultColor!!;
 	ctx.fill();
 }
 
@@ -208,11 +216,12 @@ function drawText(
 	ctx.fillText(text, pos.x, pos.y);
 }
 
-function drawLineFromCenter(
+export function drawLineFromCenter(
 	canvas: HTMLCanvasElement,
 	angle: number,
 	length: number,
-	color: string
+	color: string,
+	width: number = 3
 ) {
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
@@ -226,12 +235,12 @@ function drawLineFromCenter(
 	const endY = centerY + length * Math.sin(angle);
 
 	// Draw the line
+	ctx.globalCompositeOperation = "source-over";
 	ctx.beginPath();
 	ctx.moveTo(centerX, centerY); // Start at the center of the canvas
 	ctx.lineTo(endX, endY); // Draw to the calculated endpoint
+	ctx.closePath();
 	ctx.strokeStyle = color; // Set the line color
-	ctx.lineWidth = 2; // Set the line width
+	ctx.lineWidth = width; // Set the line width
 	ctx.stroke(); // Render the line
-
-	return ctx;
 }

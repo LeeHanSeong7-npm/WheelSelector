@@ -11,3 +11,10 @@ export function restoreIframePointerEvents(document: Document) {
 		iframe.style.pointerEvents = "auto";
 	});
 }
+
+export function hideMouseCursor(document: Document) {
+	document.body.style.cursor = "none";
+}
+export function showMouseCursor(document: Document) {
+	document.body.style.cursor = "auto";
+}
