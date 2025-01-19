@@ -114,8 +114,11 @@ export function drawItems(selector: WheelSelector, after: Function[] = []) {
 	if (cursorCanvas === null) return;
 	clearCanvas(cursorCanvas);
 	selector.items.forEach((_, idx) => drawItem(selector, idx));
+
 	drawCircleLine(cursorCanvas, outerDistance, 3, whiteColor);
 	drawCircleLine(cursorCanvas, innerDistance, 3, whiteColor);
+
+	after.forEach((e) => e(selector));
 }
 
 export function drawCancelButton(selector: WheelSelector) {
