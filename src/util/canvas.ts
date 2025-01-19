@@ -1,4 +1,5 @@
 import { WheelSelector } from "../class/WheelSelector";
+import { WheelSelectorEditor } from "../class/WheelSelectorEditor";
 import { Position } from "../types/Position";
 
 const whiteColor: string = "rgba(255, 255, 255, 1)";
@@ -20,27 +21,35 @@ export function makeCanvas(pos: Position, size: number): HTMLCanvasElement {
 	return canvas;
 }
 
-export function removeCanvas(canvas?: HTMLCanvasElement) {
-	if (canvas) canvas.remove();
+export function removeCanvas(canvas: HTMLCanvasElement | null) {
+	if (!canvas) return;
+	clearCanvas(canvas);
+	canvas.remove();
 }
 
-export function clearCanvas(canvas: HTMLCanvasElement) {
+export function clearCanvas(canvas: HTMLCanvasElement | null) {
+	if (!canvas) return;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-export function drawItem(
-	canvas: HTMLCanvasElement,
-	selector: WheelSelector,
-	itemNo: number | null
-) {
-	const ctx = canvas.getContext("2d");
+export function drawItem(selector: WheelSelector, itemNo: number | null) {
+	const {
+		items,
+		outerDistance,
+		innerDistance,
+		selectedItemNo,
+		cursorCanvas,
+	} = selector;
+	const { selectedColor, defaultColor } = selector.theme;
+
+	if (cursorCanvas === null) return;
+
+	const ctx = cursorCanvas.getContext("2d");
 	if (!ctx) return;
 	if (itemNo === null) return;
 
-	const { items, outerDistance, innerDistance, selectedItemNo } = selector;
-	const { selectedColor, defaultColor } = selector.theme;
 	const item = items[itemNo];
 
 	const itemCount = items.length;
@@ -67,21 +76,26 @@ export function drawItem(
 		selectedItemNo === itemNo ? selectedColor!! : defaultColor!!; // Assign item color or default
 	ctx.fill();
 
-	ctx.globalCompositeOperation = "source-over";
-	drawLineFromCenter(canvas, startAngle, outerDistance, whiteColor);
-	drawLineFromCenter(canvas, endAngle, outerDistance, whiteColor);
+	if (selector.items.length > 1) {
+		ctx.globalCompositeOperation = "source-over";
+		drawLineFromCenter(cursorCanvas, startAngle, outerDistance, whiteColor);
+		drawLineFromCenter(cursorCanvas, endAngle, outerDistance, whiteColor);
+	}
 
 	// Add the label
 	const midAngle = startAngle + angleStep / 2; // Find the midpoint of the slice
 	const textRadius = (innerDistance + outerDistance) / 2; // Position text between inner and outer radii
 	const textX = outerDistance + textRadius * Math.cos(midAngle); // X-coordinate for text
 	const textY = outerDistance + textRadius * Math.sin(midAngle); // Y-coordinate for text
-
-	ctx.fillStyle = selectedItemNo === itemNo ? blackColor : whiteColor; // Text color
-	ctx.font = "16px Arial"; // Text font
-	ctx.textAlign = "center"; // Center-align text
-	ctx.textBaseline = "middle"; // Middle-align text
-	ctx.fillText(item.name ?? "", textX, textY); // Draw the text
+	drawText(
+		cursorCanvas,
+		item.name ?? "",
+		selectedItemNo === itemNo ? blackColor : whiteColor,
+		{
+			x: textX,
+			y: textY,
+		}
+	);
 
 	//Erase inner slice
 	ctx.globalCompositeOperation = "destination-out";
@@ -95,25 +109,23 @@ export function drawItem(
 	ctx.globalCompositeOperation = "source-over";
 }
 
-export function drawItems(
-	canvas: HTMLCanvasElement,
-	selector: WheelSelector,
-	after: Function[] = []
-) {
-	clearCanvas(canvas);
-	selector.items.forEach((_, idx) => drawItem(canvas, selector, idx));
-	after.forEach((e) => e(canvas, selector));
+export function drawItems(selector: WheelSelector, after: Function[] = []) {
+	const { cursorCanvas, outerDistance, innerDistance } = selector;
+	if (cursorCanvas === null) return;
+	clearCanvas(cursorCanvas);
+	selector.items.forEach((_, idx) => drawItem(selector, idx));
+	drawCircleLine(cursorCanvas, outerDistance, 3, whiteColor);
+	drawCircleLine(cursorCanvas, innerDistance, 3, whiteColor);
 }
 
-export function drawCancelButton(
-	canvas: HTMLCanvasElement,
-	selector: WheelSelector
-) {
-	const ctx = canvas.getContext("2d");
+export function drawCancelButton(selector: WheelSelector) {
+	const { cursorCanvas } = selector;
+	if (cursorCanvas === null) return;
+	const ctx = cursorCanvas.getContext("2d");
 	if (!ctx) return;
 
-	const { outerDistance, innerDistance, selectedItemNo } = selector;
-	const { selectedColor } = selector.theme;
+	const { outerDistance, innerDistance, selectedItemNo, items } = selector;
+	const { selectedColor, defaultColor } = selector.theme;
 
 	ctx.globalCompositeOperation = "source-over";
 	ctx.beginPath();
@@ -121,8 +133,76 @@ export function drawCancelButton(
 	ctx.arc(outerDistance, outerDistance, innerDistance, 0, Math.PI * 2);
 	ctx.closePath();
 	ctx.fillStyle =
-		selectedItemNo === null ? selectedColor!! : transparentColor; // Assign item color or default
+		selectedItemNo === "CANCEL"
+			? selectedColor!!
+			: items.length !== 0
+			? transparentColor
+			: defaultColor!!; // Assign item color or default
 	ctx.fill();
+}
+
+export function drawDragging(selector: WheelSelectorEditor) {
+	const { draggingItem, mouseCanvas, dragginIconSize } = selector;
+
+	if (mouseCanvas === null || draggingItem === null) return;
+	if (mouseCanvas !== null) clearCanvas(mouseCanvas);
+
+	const ctx = mouseCanvas.getContext("2d");
+	if (!ctx) return;
+
+	const radius = dragginIconSize / 2;
+
+	ctx.beginPath();
+	ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+	ctx.closePath();
+	ctx.fillStyle = selector.theme.defaultColor!!;
+	ctx.fill();
+
+	drawCircleLine(mouseCanvas, radius, 3, whiteColor);
+
+	drawText(mouseCanvas, draggingItem.name ?? "", whiteColor, {
+		x: radius,
+		y: radius,
+	});
+}
+
+function drawCircleLine(
+	canvas: HTMLCanvasElement,
+	radius: number,
+	width: number,
+	color: string
+) {
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+
+	ctx.beginPath();
+	ctx.arc(
+		canvas.width / 2,
+		canvas.height / 2,
+		radius - width / 2,
+		0,
+		Math.PI * 2
+	);
+	ctx.closePath();
+
+	ctx.strokeStyle = color; // Outline color
+	ctx.lineWidth = width; // Outline thickness
+	ctx.stroke();
+}
+function drawText(
+	canvas: HTMLCanvasElement,
+	text: string,
+	color: string,
+	pos: Position
+) {
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+
+	ctx.fillStyle = color; // Text color
+	ctx.font = "16px Arial"; // Text font
+	ctx.textAlign = "center"; // Center-align text
+	ctx.textBaseline = "middle"; // Middle-align text
+	ctx.fillText(text, pos.x, pos.y);
 }
 
 function drawLineFromCenter(

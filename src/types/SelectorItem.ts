@@ -1,4 +1,5 @@
 export interface SelectorItem {
 	name: string;
-	callback: Function;
+	callback: (item: SelectorItem) => void;
+	payload?: any;
 }

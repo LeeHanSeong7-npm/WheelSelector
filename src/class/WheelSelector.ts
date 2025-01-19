@@ -14,7 +14,7 @@ export class WheelSelector {
 	isLeftClicked: Boolean = false;
 	position: Position | null = null;
 	items: SelectorItem[] = [];
-	selectedItemNo: number | null = null;
+	selectedItemNo: number | null | "CANCEL" = null;
 	outerDistance: number = 200;
 	innerDistance: number = 100;
 	cursorCanvas: HTMLCanvasElement | null = null;
@@ -72,15 +72,14 @@ export class WheelSelector {
 		this.isActive = false;
 	}
 	triggerSelected() {
-		if (this.selectedItemNo === null) return;
+		if (typeof this.selectedItemNo !== "number") return;
 		const item = this.items[this.selectedItemNo];
 		this.selectedItemNo = null;
-		item.callback();
+		item.callback(item);
 	}
 	redraw() {
 		if (this.position === null) return;
-		if (this.items.length === 0) return;
-		drawItems(this.cursorCanvas!!, this, [drawCancelButton]);
+		drawItems(this, [drawCancelButton]);
 	}
 	selectItem(itemno: number | null) {
 		if (itemno !== null && this.items[itemno] === undefined)

@@ -11,3 +11,10 @@ export interface SelectorOptions {
 export interface MouseSelectorOptions extends SelectorOptions {
 	activateKey?: string | null;
 }
+
+export interface EditorOptions {
+	items?: SelectorItem[];
+	baseElement: HTMLElement | null;
+	theme?: Theme;
+	onUpdated?: (items: SelectorItem[]) => void;
+}
