@@ -83,3 +83,7 @@ node_modules/
 
 # Yarn Integrity file
 .yarn-integrity
+
+*.gif
+README.md
+tsconfig.*.json
